@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import routerUsuarios from './routers/usuario_routes.js';
+import routerEstudiantes from './routers/estudiante_routes.js';
 
 //Inicializaciones
 const app = express();
@@ -22,6 +23,9 @@ app.get('/', (req, res) => res.send('Server on'));
 
 // Ruta para usuarios (administradores)
 app.use('/api', routerUsuarios);
+
+//Rutas para estudiantes
+app.use('/api', routerEstudiantes);
 
 //Manejo de una ruta que no sea encontrada
 app.use((req, res) => {

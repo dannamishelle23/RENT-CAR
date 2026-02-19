@@ -9,9 +9,10 @@ const crearEstudiante = async(req,res) => {
     try {
         const {nombre, apellido, email, password, cedula, fecha_nacimiento, ciudad, direccion, telefono} = req.body
         if (Object.values(req.body).includes("")) return res.status(400).json({message: "Todos los campos son obligatorios."})
-        //1. Verificar si el email ya existe en la tabla 'Usuarios'
-        const emailExistente = await Usuarios.findOne({email})
-        if (emailExistente) return res.status(400).json({message: "El correo electrónico ya se encuentra registrado."})
+        if (cedula.length < 7 || cedula.length > 10) return res.status(400).json({message: "La cédula debe tener entre 7 y 10 dígitos."})
+        //1. Verificar si el email y la cédula existen en la BDD
+        const datosExistentes = await Usuarios.findOne({email, cedula})
+        if (datosExistentes) return res.status(400).json({message: `El estudiante ya se encuentra registrado con las siguientes credenciales: email - ${datosExistentes.email}, cédula - ${datosExistentes.cedula}.`})
         //2. Crear usuario con rol 'Estudiante'
         const nuevoUsuario = new Usuarios({
             nombre,apellido, email, password, rol: "Estudiante"
@@ -152,16 +153,7 @@ const actualizarEstudiante = async (req, res) => {
         }
 
         // Campos permitidos del estudiante
-        const {
-            nombre,
-            apellido,
-            cedula,
-            ciudad,
-            direccion,
-            telefono,
-            estadoEstudiante,
-            email
-        } = req.body;
+        const {nombre,apellido,cedula,ciudad,direccion, telefono, estadoEstudiante,email} = req.body;
 
         // Actualizar datos del estudiante
         if (cedula) estudiante.cedula = cedula;
@@ -205,11 +197,11 @@ const eliminarEstudiante = async (req,res)=>{
         if (Object.values(req.body).includes("")) return res.status(400).json({msg:"Debes llenar todos los campos"})
         if( !mongoose.Types.ObjectId.isValid(id) ) return res.status(404).json({msg:`No existe el estudiante ${id}`})
         await Estudiante.findByIdAndUpdate(id,{salidaEstudiante:Date.parse(salidaEstudiante),estadoEstudiante:false})
-        res.status(200).json({msg:"Fecha de salida registrado exitosamente. El estudiante ha sido marcado como inactivo."})
+        res.status(200).json({msg:"Fecha de salida registrada. El estudiante ha sido deshabilitado con éxito."})
 
     } catch (error) {
         console.error(error)
-        res.status(500).json({ msg: `Error al eliminar estudiante - ${error}` })
+        res.status(500).json({ msg: `Error al deshabilitar estudiante - ${error}` })
     }
 }
 

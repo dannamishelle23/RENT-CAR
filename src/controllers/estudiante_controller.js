@@ -11,8 +11,16 @@ const crearEstudiante = async(req,res) => {
         if (Object.values(req.body).includes("")) return res.status(400).json({message: "Todos los campos son obligatorios."})
         if (cedula.length < 7 || cedula.length > 10) return res.status(400).json({message: "La cédula debe tener entre 7 y 10 dígitos."})
         //1. Verificar si el email y la cédula existen en la BDD
-        const datosExistentes = await Usuarios.findOne({email, cedula})
-        if (datosExistentes) return res.status(400).json({message: `El estudiante ya se encuentra registrado con las siguientes credenciales: email - ${datosExistentes.email}, cédula - ${datosExistentes.cedula}.`})
+        const [emailExistente, cedulaExistente] = await Promise.all([
+            Usuarios.findOne({ email }),
+            Estudiante.findOne({ cedula })
+        ]);
+
+        if (emailExistente || cedulaExistente) {
+            return res.status(400).json({
+                message: `El usuario ya se encuentra registrado con ese correo o cédula en el sistema. No puedes usar datos que ya pertenecen a otro usuario.`
+            });
+        }
         //2. Crear usuario con rol 'Estudiante'
         const nuevoUsuario = new Usuarios({
             nombre,apellido, email, password, rol: "Estudiante"

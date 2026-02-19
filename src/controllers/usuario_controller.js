@@ -2,6 +2,7 @@ import Usuarios from '../models/Usuarios.js';
 import {sendMailToRecoveryPassword} from '../helpers/sendMail.js';
 import {crearTokenJWT} from '../middlewares/JWT.js';
 
+/*
 //Registro de usuarios
 const registroUsuarios = async(req,res) => {
   try {
@@ -16,7 +17,7 @@ const registroUsuarios = async(req,res) => {
   } catch (error) {
     res.status(500).json({message: `Error al procesar la solicitud - ${error}`})
   }
-}
+}*/
 
 //Recuperar contraseña en caso de olvido
 const recuperarPassword = async(req,res) => {
@@ -131,7 +132,7 @@ const perfilUsuario = (req,res) => {
 }
 
 export {
-    registroUsuarios,
+    //registroUsuarios,
     recuperarPassword,
     comprobarTokenPassword,
     crearNuevoPassword,

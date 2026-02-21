@@ -205,6 +205,26 @@ const actualizarEstudiante = async (req, res) => {
         // Campos permitidos del estudiante
         const {nombre,apellido,cedula,ciudad,direccion, telefono, estadoEstudiante,email} = req.body;
 
+        // Validar cédula duplicada si se intenta cambiar
+        if (cedula && cedula !== estudiante.cedula) {
+            const cedulaDuplicada = await Estudiante.findOne({ cedula, _id: { $ne: id } });
+            if (cedulaDuplicada) {
+                return res.status(400).json({
+                    msg: "La cédula ya está registrada en el sistema."
+                });
+            }
+        }
+
+        // Validar email duplicado si se intenta cambiar
+        if (email) {
+            const emailDuplicado = await Usuarios.findOne({ email, _id: { $ne: estudiante.usuario } });
+            if (emailDuplicado) {
+                return res.status(400).json({
+                    msg: "El email ya está registrado en el sistema."
+                });
+            }
+        }
+
         // Actualizar datos del estudiante
         if (cedula) estudiante.cedula = cedula;
         if (ciudad) estudiante.ciudad = ciudad;
@@ -216,14 +236,14 @@ const actualizarEstudiante = async (req, res) => {
 
         // Actualizar datos del usuario relacionado
         if (nombre || apellido || email) {
-            await Usuario.findByIdAndUpdate(
+            await Usuarios.findByIdAndUpdate(
                 estudiante.usuario,
                 {
                     ...(nombre && { nombre }),
                     ...(apellido && { apellido }),
                     ...(email && { email })
                 },
-                { new: true }
+                { new: true, runValidators: true }
             );
         }
 

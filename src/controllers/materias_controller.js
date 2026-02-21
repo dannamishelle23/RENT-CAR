@@ -154,11 +154,21 @@ const actualizarMateria = async (req, res) => {
             }
         }
 
-        const materiaActualizada = await Materias.findByIdAndUpdate(
-            id,
-            { nombre, codigo, descripcion, creditos },
-            { new: true, runValidators: true }
-        );
+        let materiaActualizada
+        try {
+            materiaActualizada = await Materias.findByIdAndUpdate(
+                id,
+                { nombre, codigo, descripcion, creditos },
+                { new: true, runValidators: true }
+            );
+        } catch (errorActualizar) {
+            if (errorActualizar.code === 11000) {
+                return res.status(400).json({
+                    message: "El código ya está registrado en otra materia."
+                });
+            }
+            throw errorActualizar;
+        }
 
         res.status(200).json({
             message: "Materia actualizada con éxito.",

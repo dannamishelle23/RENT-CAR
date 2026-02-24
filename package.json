@@ -4,6 +4,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "start": "node src/index.js",
     "smart": "node src/index.js",
     "dev": "node --watch src/index.js"
   },

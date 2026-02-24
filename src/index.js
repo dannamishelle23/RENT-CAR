@@ -4,5 +4,5 @@ import connection from './database.js';
 connection();
 
 app.listen(app.get('port'), () => {
-    console.log(`Server ok on port "localhost:${app.get('port')}"`);
+    console.log(`Server ok on port "${app.get('port')}"`);
 });

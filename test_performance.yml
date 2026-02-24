@@ -1,0 +1,55 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      name: Carga normal
+    - duration: 30
+      arrivalRate: 15
+      name: Carga alta
+
+scenarios:
+  - name: Flujo completo Admin (Estudiante + Materia + Matricula)
+    flow:
+
+      # LOGIN ADMIN
+      - post:
+          url: "/api/usuario/login"
+          headers:
+            Content-Type: "application/json"
+          json:
+            email: "danna.lopez@epn.edu.ec"
+            password: "dannamishelle23"
+          capture:
+            - json: "$.usuario.token"
+              as: "token"
+
+      # CREAR ESTUDIANTE
+      - post:
+          url: "/api/estudiantes/crear-estudiante"
+          headers:
+            Authorization: "Bearer {{ token }}"
+            Content-Type: "application/json"
+          json:
+            nombre: "Test"
+            apellido: "User"
+            cedula: "{{ $randomNumber() }}"
+            fecha_nacimiento: "2002-05-10"
+            direccion: "Quito"
+            telefono: "099{{ $randomNumber() }}"
+            email: "test{{ $randomNumber() }}@gmail.com"
+
+      # CREAR MATERIA
+      - post:
+          url: "/api/materias/crear-materia"
+          headers:
+            Authorization: "Bearer {{ token }}"
+            Content-Type: "application/json"
+          json:
+            nombre: "Materia {{ $randomNumber() }}"
+            codigo: "COD{{ $randomNumber() }}"
+            descripcion: "Materia creada en prueba"
+            creditos: 1
+          capture:
+            - json: "$.materia._id"
+              as: "materiaId"

@@ -76,6 +76,7 @@ const crearEstudiante = async(req,res) => {
         res.status(201).json({
             message: "El estudiante ha sido creado con éxito.",
             credenciales: {
+                idEstudiante: nuevoEstudiante._id,
                 email: email,
                 password: passwordGenerada,
                 aviso: "Las credenciales han sido enviadas al correo del estudiante."

@@ -1,6 +1,6 @@
 import Matriculas from '../models/Matriculas.js';
 import Estudiantes from '../models/Cliente.js';
-import Materias from '../models/Materias.js';
+import Materias from '../models/Vehiculos.js';
 import mongoose from 'mongoose';
 import { generarCodigoMatricula } from '../helpers/generateCode.js';
 

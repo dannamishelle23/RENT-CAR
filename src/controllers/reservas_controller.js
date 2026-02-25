@@ -1,140 +1,139 @@
-import Matriculas from '../models/Matriculas.js';
-import Estudiantes from '../models/Cliente.js';
-import Materias from '../models/Vehiculos.js';
+import Reservas from '../models/Reservas.js';
+import Clientes from '../models/Cliente.js';
+import Vehiculos from '../models/Vehiculos.js';
 import mongoose from 'mongoose';
-import { generarCodigoMatricula } from '../helpers/generateCode.js';
+import { generarCodigoReserva } from '../helpers/generateCode.js';
 
-//1. Crear matricula (lo hace el estudiante)
-const crearMatricula = async(req,res) => {
+//1. Crear reserva
+const crearReserva = async(req,res) => {
     try {
-        const { materiaId } = req.body;
+        const { vehiculoId } = req.body;
         
-        if (!materiaId) {
+        if (!vehiculoId) {
             return res.status(400).json({
-                message: "El campo materiaId es obligatorio."
+                message: "El campo vehiculoId es obligatorio."
             });
         }
 
-        // Obtener el estudianteID del usuario autenticado (del token)
+        // Obtener el clienteID del usuario autenticado (del token)
         const usuarioActual = req.usuarioHeader;
-        const estudiante = await Estudiantes.findOne({ usuario: usuarioActual._id });
+        const cliente = await Clientes.findOne({ usuario: usuarioActual._id });
         
-        if (!estudiante) {
+        if (!cliente) {
             return res.status(404).json({
-                message: "Estudiante no encontrado para este usuario."
+                message: "Cliente no encontrado para este usuario."
             });
         }
 
-        const estudianteId = estudiante._id;
+        const clienteId = cliente._id;
 
-        // Verificar si la materia existe
-        const materia = await Materias.findById(materiaId);
-        if (!materia) {
+        // Verificar si el vehículo existe
+        const vehiculo = await Vehiculos.findById(vehiculoId);
+        if (!vehiculo) {
             return res.status(404).json({
-                message: "No existe la materia con el ID proporcionado."
+                message: "No existe el vehículo con el ID proporcionado."
             });
         }
 
-        //Verificar que el estudiante pueda matricularse en una materia activa
-        if (materia.estadoMateria === false) {
+        //Verificar que el vehículo esté disponible
+        if (vehiculo.estadoVehiculo === false) {
             return res.status(400).json({
-                message: "No se puede matricular en una materia deshabilitada."
+                message: "No se puede reservar un vehículo deshabilitado."
             });
         }
 
-        //Verificar que el estudiante ya está matriculado en esa materia
-        const matriculaExistente = await Matriculas.findOne({ 
-            estudianteID: estudianteId, 
-            materiaID: materiaId,
-            estadoMatricula: true
+        //Verificar que el cliente ya no tenga una reserva activa
+        const reservaExistente = await Reservas.findOne({ 
+            clienteID: clienteId, 
+            estadoReserva: true
         });
-        if (matriculaExistente) {
+        if (reservaExistente) {
             return res.status(400).json({
-                message: "Ya estás matriculado en esta materia."
+                message: "Ya tienes una reserva activa."
             });
         }
 
-        const nuevaMatricula = new Matriculas({
-            codigo: generarCodigoMatricula(),
-            estudianteID: estudianteId,
-            materiaID: materiaId,
-            estadoMatricula: true
+        const nuevaReserva = new Reservas({
+            codigo: generarCodigoReserva(),
+            clienteID: clienteId,
+            vehiculoID: vehiculoId,
+            estadoReserva: true
         });
 
-        await nuevaMatricula.save();
+        await nuevaReserva.save();
 
-        // Poblar los datos de la materia y estudiante para devolver en la respuesta
-        const matriculaConDetalles = await Matriculas.findById(nuevaMatricula._id)
+        // Poblar los datos del vehículo y cliente para devolver en la respuesta
+        const reservaConDetalles = await Reservas.findById(nuevaReserva._id)
             .populate({
-                path: 'estudianteID',
+                path: 'clienteID',
                 select: 'cedula usuario',
                 populate: {
                     path: 'usuario',
                     select: 'nombre apellido'
                 }
             })
-            .populate('materiaID', 'nombre codigo creditos');
+            .populate('vehiculoID', 'marca modelo año estadoVehiculo');
 
         return res.status(201).json({
-            message: "Matrícula creada con éxito",
-            matricula: {
-                _id: matriculaConDetalles._id,
-                codigo: matriculaConDetalles.codigoMatricula,
-                fecha: matriculaConDetalles.fechaMatricula,
-                estudiante: {
-                    _id: matriculaConDetalles.estudianteID._id,
-                    cedula: matriculaConDetalles.estudianteID.cedula,
-                    nombre: `${matriculaConDetalles.estudianteID.usuario.nombre} ${matriculaConDetalles.estudianteID.usuario.apellido}`
+            message: "Reserva creada con éxito",
+            reserva: {
+                _id: reservaConDetalles._id,
+                codigo: reservaConDetalles.codigo,
+                fecha: reservaConDetalles.fechaReserva,
+                cliente: {
+                    _id: reservaConDetalles.clienteID._id,
+                    cedula: reservaConDetalles.clienteID.cedula,
+                    nombre: `${reservaConDetalles.clienteID.usuario.nombre} ${reservaConDetalles.clienteID.usuario.apellido}`
                 },
-                materia: {
-                    _id: matriculaConDetalles.materiaID._id,
-                    nombre: matriculaConDetalles.materiaID.nombre,
-                    codigo: matriculaConDetalles.materiaID.codigo,
-                    creditos: matriculaConDetalles.materiaID.creditos
+                vehiculo: {
+                    _id: reservaConDetalles.vehiculoID._id,
+                    marca: reservaConDetalles.vehiculoID.marca,
+                    modelo: reservaConDetalles.vehiculoID.modelo,
+                    año: reservaConDetalles.vehiculoID.año
                 }
             }
         });
     } catch (error) {
-        console.error("Error al crear matrícula:", error);
+        console.error("Error al crear reserva:", error);
         return res.status(500).json({
-            message: "Error al crear la matrícula."
+            message: "Error al crear la reserva."
         });
     }   
 }
 
-//Listar matriculas con detalles de estudiante y materia
-const listarMatriculas = async(req,res) => {
+//Listar reservas con detalles de cliente y vehículo
+const listarReservas = async(req,res) => {
     try {
         const usuarioActual = req.usuarioHeader;
         let filtro = {};
 
-        // Si es estudiante, solo ve sus propias matrículas
-        if (usuarioActual.rol === "Estudiante") {
-            const estudiante = await Estudiantes.findOne({ usuario: usuarioActual._id });
-            if (!estudiante) {
+        // Si es estudiante, solo ve sus propias reservas
+        if (usuarioActual.rol === "Cliente") {
+            const cliente = await Clientes.findOne({ usuario: usuarioActual._id });
+            if (!cliente) {
                 return res.status(404).json({
-                    message: "Estudiante no encontrado."
+                    message: "Cliente no encontrado."
                 });
             }
-            filtro = { estudianteID: estudiante._id };
+            filtro = { clienteID: cliente._id };
         }
-        // Si es admin, ve todas las matrículas
+        // Si es admin, ve todas las reservas
 
-        const matriculas = await Matriculas.find(filtro)
+        const reservas = await Reservas.find(filtro)
             .populate({
-                path: 'estudianteID',
+                path: 'clienteID',
                 select: 'cedula usuario',
                 populate: {
                     path: 'usuario',
                     select: 'nombre apellido'
                 }
             })
-            .populate('materiaID', 'nombre codigo creditos');
+            .populate('vehiculoID', 'marca modelo año estadoVehiculo');
             
         res.status(200).json({
-            message: "Matrículas obtenidas con éxito.",
-            total: matriculas.length,
-            matriculas
+            message: "Reservas obtenidas con éxito.",
+            total: reservas.length,
+            reservas
         });
     } catch (error) {
         console.log(error);
@@ -142,48 +141,48 @@ const listarMatriculas = async(req,res) => {
     }
 }
 
-//Visualizar una matricula por ID
-const detalleMatricula = async(req,res) => {
+//Visualizar una reserva por ID
+const detalleReserva = async(req,res) => {
     try {
         const { id } = req.params;
         const usuarioActual = req.usuarioHeader;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(404).json({
-                message: `No existe la matrícula ${id}`
+                message: `No existe la reserva ${id}`
             });
         }
 
-        const matricula = await Matriculas.findById(id)
+        const reserva = await Reservas.findById(id)
             .populate({
-                path: 'estudianteID',
+                path: 'clienteID',
                 select: 'cedula usuario',
                 populate: {
                     path: 'usuario',
                     select: 'nombre apellido'
                 }
             })
-            .populate('materiaID', 'nombre codigo creditos');     
+            .populate('vehiculoID', 'marca modelo año estadoVehiculo');     
         
-        if (!matricula) {
+        if (!reserva) {
             return res.status(404).json({
-                message: `No existe la matrícula ${id}`
+                message: `No existe la reserva ${id}`
             });
         }
 
-        // Validar que el estudiante solo vea sus propias matrículas
+        // Validar que el estudiante solo vea sus propias reservas
         if (usuarioActual.rol === "Estudiante") {
             const estudiante = await Estudiantes.findOne({ usuario: usuarioActual._id });
-            if (!estudiante || matricula.estudianteID._id.toString() !== estudiante._id.toString()) {
+            if (!estudiante || reserva.clienteID._id.toString() !== estudiante._id.toString()) {
                 return res.status(403).json({
-                    message: "No tienes permiso para ver esta matrícula."
+                    message: "No tienes permiso para ver esta reserva."
                 });
             }
         }
 
         return res.status(200).json({
-            message: "Matrícula obtenida con éxito.",
-            matricula
+            message: "Reserva obtenida con éxito.",
+            reserva
         });
     } catch (error) {
         console.log(error);
@@ -255,7 +254,7 @@ const actualizarMatricula = async (req, res) => {
 */
 
 // Eliminar matrícula por id
-const eliminarMatricula = async (req, res) => {
+const eliminarReserva = async (req, res) => {
     try {
         const { id } = req.params;
         const { motivo, fecha } = req.body;
@@ -276,30 +275,30 @@ const eliminarMatricula = async (req, res) => {
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(404).json({
-                message: `No existe la matrícula ${id}`
+                message: `No existe la reserva ${id}`
             });
         }
 
-        const matricula = await Matriculas.findById(id);
-        if (!matricula) {
+        const reserva = await Reservas.findById(id);
+        if (!reserva) {
             return res.status(404).json({ 
-                message: "Matrícula no encontrada" 
+                message: "Reserva no encontrada" 
             });
         }
 
-        // Validar que el estudiante solo elimine sus propias matrículas
-        if (usuarioActual.rol === "Estudiante") {
-            const estudiante = await Estudiantes.findOne({ usuario: usuarioActual._id });
-            if (!estudiante || matricula.estudianteID.toString() !== estudiante._id.toString()) {
+        // Validar que el estudiante solo elimine sus propias reservas
+        if (usuarioActual.rol === "Cliente") {
+            const cliente = await Clientes.findOne({ usuario: usuarioActual._id });
+            if (!cliente || reserva.clienteID.toString() !== cliente._id.toString()) {
                 return res.status(403).json({
-                    message: "No tienes permiso para eliminar esta matrícula."
+                    message: "No tienes permiso para eliminar esta reserva."
                 });
             }
         }
 
-        await matricula.deleteOne();
+        await reserva.deleteOne();
         res.status(200).json({ 
-            message: "Matrícula eliminada correctamente" 
+            message: "Reserva eliminada correctamente" 
         });
     } catch (error) {
         console.log(error);
@@ -308,9 +307,9 @@ const eliminarMatricula = async (req, res) => {
 };
 
 export {
-    crearMatricula,
-    listarMatriculas,
-    detalleMatricula,
-    //actualizarMatricula,
-    eliminarMatricula
+    crearReserva,
+    listarReservas,
+    detalleReserva,
+    //actualizarReserva,
+    eliminarReserva
 }

@@ -6,24 +6,24 @@ const sendMailToRecoveryPassword = (userMail, token) => {
         userMail,
         "Recupera tu contraseña",
         `
-            <h1>ESFOT Matrículas</h1>
+            <h1>RENT CAR</h1>
             <p>Has solicitado restablecer tu contraseña.</p>
             <a href="${process.env.URL_BACKEND}recuperarpassword/${token}">
             Clic para restablecer tu contraseña
             </a>
             <hr>
-            <footer>ESFOT 2026. Todos los derechos reservados.</footer>
+            <footer>RENT CAR 2026. Todos los derechos reservados.</footer>
         `
         )
 }
 
-const sendMailToNewStudent = (userMail, nombre, email, password) => {
+const sendMailToNewClient = (userMail, nombre, email, password) => {
 
     return sendMail(
         userMail,
-        "Credenciales de acceso - ESFOT Matrículas",
+        "Credenciales de acceso - RENT CAR",
         `
-            <h1>ESFOT Matrículas</h1>
+            <h1>RENT CAR</h1>
             <p>¡Bienvenido ${nombre}!</p>
             <p>Tu cuenta ha sido creada exitosamente. Aquí están tus credenciales para acceder al sistema:</p>
             <hr>
@@ -31,12 +31,12 @@ const sendMailToNewStudent = (userMail, nombre, email, password) => {
             <p><strong>Contraseña:</strong> ${password}</p>
             <hr>
             <p>Por favor, guarda estas credenciales en un lugar seguro.</p>
-            <footer>ESFOT 2026. Todos los derechos reservados.</footer>
+            <footer>RENT CAR 2026. Todos los derechos reservados.</footer>
         `
         )
 }
 
 export {
     sendMailToRecoveryPassword,
-    sendMailToNewStudent
+    sendMailToNewClient
 }

@@ -1,9 +1,9 @@
 import Cliente from '../models/Cliente.js';
 import Usuarios from '../models/Usuarios.js';
 import mongoose from 'mongoose';
-import {sendMailToNewStudent} from '../helpers/sendMail.js';
+import {sendMailToNewClient} from '../helpers/sendMail.js';
 
-//CRUD de estudiantes por medio de un usuario (administrador)
+//CRUD de clientes por medio de un usuario
 
 //1. CREAR CLIENTES
 const crearCliente = async(req,res) => {
@@ -69,8 +69,8 @@ const crearCliente = async(req,res) => {
         }
         
         //5. Enviar correo con credenciales (sin bloquear la respuesta)
-        sendMailToNewStudent(email, nombre, email, passwordGenerada).catch(err => {
-            console.error("Error al enviar email al estudiante:", err)
+        sendMailToNewClient(email, nombre, email, passwordGenerada).catch(err => {
+            console.error("Error al enviar email al cliente:", err)
         })
         
         res.status(201).json({

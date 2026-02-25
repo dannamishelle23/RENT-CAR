@@ -1,6 +1,6 @@
 import {Schema, model} from 'mongoose';
 
-const EstudianteSchema = new Schema({
+const ClienteSchema = new Schema({
     cedula: {
         type: String,
         required: true,
@@ -31,11 +31,11 @@ const EstudianteSchema = new Schema({
         required:true,
         default:Date.now
     },
-    salidaEstudiante:{
+    fechaEliminacionCliente:{
         type:Date,
         default:null
     },
-    estadoEstudiante:{
+    estadoCliente:{
         type:String,
         enum: ['Activo', 'Inactivo'],
         default: 'Activo'
@@ -54,4 +54,4 @@ const EstudianteSchema = new Schema({
     timestamps: true
 })
 
-export default model('Estudiantes', EstudianteSchema);
+export default model('Clientes', ClienteSchema);

@@ -1,12 +1,12 @@
-import Estudiante from '../models/Estudiante.js';
+import Cliente from '../models/Cliente.js';
 import Usuarios from '../models/Usuarios.js';
 import mongoose from 'mongoose';
 import {sendMailToNewStudent} from '../helpers/sendMail.js';
 
 //CRUD de estudiantes por medio de un usuario (administrador)
 
-//1. CREAR ESTUDIANTES
-const crearEstudiante = async(req,res) => {
+//1. CREAR CLIENTES
+const crearCliente = async(req,res) => {
     try {
         const {nombre, apellido, email, cedula, fecha_nacimiento, ciudad, direccion, telefono} = req.body
         if (Object.values(req.body).includes("")) return res.status(400).json({message: "Todos los campos son obligatorios."})
@@ -25,9 +25,9 @@ const crearEstudiante = async(req,res) => {
         //2. Generar contraseña aleatoria corta
         const passwordGenerada = Math.random().toString(36).slice(2, 10);
         
-        //3. Crear usuario con rol 'Estudiante'
+        //3. Crear usuario con rol 'Cliente'
         const nuevoUsuario = new Usuarios({
-            nombre,apellido, email, password: passwordGenerada, rol: "Estudiante"
+            nombre,apellido, email, password: passwordGenerada, rol: "Cliente"
         });
         nuevoUsuario.password = await nuevoUsuario.encryptPassword(passwordGenerada)
         
@@ -45,7 +45,7 @@ const crearEstudiante = async(req,res) => {
         }
         
         //4. Crear estudiante asociado al usuario creado
-        const nuevoEstudiante = new Estudiante({
+        const nuevoCliente = new Cliente({
             cedula,
             fecha_nacimiento,
             ciudad,
@@ -56,7 +56,7 @@ const crearEstudiante = async(req,res) => {
         })
         
         try {
-            await nuevoEstudiante.save()
+            await nuevoCliente.save()
         } catch (errorEstudiante) {
             // Si hay error al guardar estudiante (ej: cédula duplicada), eliminar el usuario creado
             await Usuarios.findByIdAndDelete(usuarioGuardado._id)
@@ -88,19 +88,19 @@ const crearEstudiante = async(req,res) => {
     }
 }
 
-//2. Ver/listar estudiantes.
-const listarEstudiantes = async (req, res) => {
+//2. Ver/listar clientes.
+const listarClientes = async (req, res) => {
     try {
 
-        const estudiantes = await Estudiante.find({
-            estadoEstudiante: "Activo",
+        const clientes = await Cliente.find({
+            estadoCliente: "Activo",
             creadoPor: req.usuarioHeader._id
         })
         .populate("usuario", "nombre apellido email rol")
         .populate("creadoPor", "nombre apellido email rol");
 
         //Transformar la respuesta
-        const resultado = estudiantes.map(est => ({
+        const resultado = clientes.map(est => ({
             nombre: est.usuario?.nombre,
             apellido: est.usuario?.apellido,
             cedula: est.cedula,
@@ -129,46 +129,46 @@ const listarEstudiantes = async (req, res) => {
 };
 
 //Visualizar el detalle de un registro en particular
-const detalleEstudiante = async (req, res) => {
+const detalleCliente = async (req, res) => {
     try {
 
         const { id } = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(404).json({ 
-                msg: `No existe el estudiante ${id}` 
+                msg: `No existe el cliente ${id}` 
             });
         }
 
-        const estudiante = await Estudiante.findById(id)
+        const cliente = await Cliente.findById(id)
             .populate("usuario", "nombre apellido email rol")
             .populate("creadoPor", "nombre apellido email rol");
 
-        if (!estudiante) {
+        if (!cliente) {
             return res.status(404).json({
-                msg: "Estudiante no encontrado"
+                msg: "Cliente no encontrado"
             });
         }
 
         //Formatear la respuesta
         const resultado = {
-            _id: estudiante._id,
-            nombre: estudiante.usuario?.nombre,
-            apellido: estudiante.usuario?.apellido,
-            cedula: estudiante.cedula,
-            fecha_nacimiento: estudiante.fecha_nacimiento,
-            direccion: estudiante.direccion,
-            ciudad: estudiante.ciudad,
-            telefono: estudiante.telefono,
-            email: estudiante.usuario?.email,
-            rol: estudiante.usuario?.rol,
-            estadoEstudiante: estudiante.estadoEstudiante,
+            _id: cliente._id,
+            nombre: cliente.usuario?.nombre,
+            apellido: cliente.usuario?.apellido,
+            cedula: cliente.cedula,
+            fecha_nacimiento: cliente.fecha_nacimiento,
+            direccion: cliente.direccion,
+            ciudad: cliente.ciudad,
+            telefono: cliente.telefono,
+            email: cliente.usuario?.email,
+            rol: cliente.usuario?.rol,
+            estadoCliente: cliente.estadoCliente,
             creadoPor: {
-                id: estudiante.creadoPor?._id,
-                nombre: estudiante.creadoPor?.nombre,
-                apellido: estudiante.creadoPor?.apellido,
-                email: estudiante.creadoPor?.email,
-                rol: estudiante.creadoPor?.rol
+                id: cliente.creadoPor?._id,
+                nombre: cliente.creadoPor?.nombre,
+                apellido: cliente.creadoPor?.apellido,
+                email: cliente.creadoPor?.email,
+                rol: cliente.creadoPor?.rol
             }
         };
 
@@ -182,8 +182,8 @@ const detalleEstudiante = async (req, res) => {
     }
 };
 
-//3. Actualizar la información de un estudiante 
-const actualizarEstudiante = async (req, res) => {
+//3. Actualizar la información de un cliente 
+const actualizarCliente = async (req, res) => {
     try {
 
         const { id } = req.params;
@@ -260,26 +260,27 @@ const actualizarEstudiante = async (req, res) => {
     }
 };
 
-const eliminarEstudiante = async (req,res)=>{
+//Eliminar cliente (solo eliminacion lógica, estado inactivo)
+const eliminarCliente = async (req,res)=>{
 
     try {
         const {id} = req.params
-        const {salidaEstudiante} = req.body
+        const {fechaEliminacionCliente} = req.body
         if (Object.values(req.body).includes("")) return res.status(400).json({msg:"Debes llenar todos los campos"})
-        if( !mongoose.Types.ObjectId.isValid(id) ) return res.status(404).json({msg:`No existe el estudiante ${id}`})
-        await Estudiante.findByIdAndUpdate(id,{salidaEstudiante:Date.parse(salidaEstudiante),estadoEstudiante:false})
-        res.status(200).json({msg:"Fecha de salida registrada. El estudiante ha sido deshabilitado con éxito."})
+        if( !mongoose.Types.ObjectId.isValid(id) ) return res.status(404).json({msg:`No existe el cliente ${id}`})
+        await Cliente.findByIdAndUpdate(id,{fechaEliminacionCliente:Date.parse(fechaEliminacionCliente),estadoCliente:false})
+        res.status(200).json({msg:"El cliente ha sido deshabilitado con éxito."})
 
     } catch (error) {
         console.error(error)
-        res.status(500).json({ msg: `Error al deshabilitar estudiante - ${error}` })
+        res.status(500).json({ msg: `Error al deshabilitar la cuenta del cliente - ${error}` })
     }
 }
 
 export {
-    crearEstudiante,
-    listarEstudiantes,
-    detalleEstudiante,
-    actualizarEstudiante,
-    eliminarEstudiante
+    crearCliente,
+    listarClientes,
+    detalleCliente,
+    actualizarCliente,
+    eliminarCliente
 }

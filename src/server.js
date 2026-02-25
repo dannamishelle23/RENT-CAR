@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import routerUsuarios from './routers/usuario_routes.js';
-import routerEstudiantes from './routers/estudiante_routes.js';
+import routerEstudiantes from './routers/cliente_routes.js';
 import routerMaterias from './routers/materia_routes.js';
 import routerMatriculas from './routers/matriculas_routes.js';
 

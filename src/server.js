@@ -3,9 +3,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import routerUsuarios from './routers/usuario_routes.js';
-import routerEstudiantes from './routers/cliente_routes.js';
-import routerMaterias from './routers/vehiculo_routes.js';
-import routerMatriculas from './routers/matriculas_routes.js';
+import routerClientes from './routers/cliente_routes.js';
+import routerVehiculos from './routers/vehiculo_routes.js';
+import routerReservas from './routers/reservas_routes.js';
 
 //Inicializaciones
 const app = express();
@@ -23,17 +23,17 @@ app.set('port', process.env.PORT || 3000);
 //Ruta principal
 app.get('/', (req, res) => res.send('Server on'));
 
-// Ruta para usuarios (administradores)
+// Ruta para usuarios 
 app.use('/api', routerUsuarios);
 
-//Rutas para estudiantes
-app.use('/api', routerEstudiantes);
+//Rutas para clientes
+app.use('/api', routerClientes);
 
-//Rutas para materias 
-app.use('/api', routerMaterias);
+//Rutas para vehiculos
+app.use('/api', routerVehiculos);
 
-//Rutas para matriculas
-app.use('/api', routerMatriculas);
+//Rutas para reservas
+app.use('/api', routerReservas);
 
 //Manejo de una ruta que no sea encontrada
 app.use((req, res) => {
